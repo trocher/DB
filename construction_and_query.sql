@@ -182,12 +182,42 @@ VALUES
 INSERT INTO Substitute
 VALUES
 (12,date('2020-05-11'),20);
--- ITEM I IS BROKEN, ASSIGN ANOTHER ONE
--- delete assignment
+
+-- drill 3 IS ASSIGNED TO PROJECT 1 AND JUST BROKE,
+-- ASSIGN ANOTHER ONE FOR THE REMAINING 3 DAYS AND PUT  IT IN MAINTENANCE
+
+-- find assignment and delete it
+DELETE 
+FROM Assigned
+WHERE 
+    modelID = 'drill'
+    AND itemID = 3
+    AND start + duration > date('now')
+;
+
 -- find another available item
--- assign another item of the same model to subproject
--- put I in maintenance
--- 1
+SELECT model, itemID
+FROM Item
+WHERE NOT (model, itemID) IN (
+    SELECT model, itemID
+    FROM Assigned
+    WHERE 
+        start+duration > date('now')
+        AND start < date('now') + date('3 days')
+    )
+LIMIT 1;
+-- (drill 4) is available
+
+-- assign this new item to subproject
+INSERT INTO Assigned
+VALUES
+('drill', 4, date('now'), date('3 days'), );
+
+-- put drill 3 in maintenance for a days
+INSERT INTO Maintenance
+VALUES
+('drill', 3, date('now'), date('1 day'));
+
 
 -- ITEM I IS DAMAGED, WHO DID IT?
 -- last 10 uses of item I
