@@ -9,186 +9,12 @@ CS-A1150 project part 2
 /*
 -> unique is ensured by primary key statements
 -> reference key for primary key requires uniqueness
--> MODIFIED : removing location from subproject
--> MODIFIED : added :FOREIGN KEY(socialSecurityNoAbsent, start) REFERENCES Absence(socialSecurityNoAbsent, start)
-             to the substitute table
 TODO LIST:
--> FINISH TO CREATE AND INPUT DATA FOR THE MACHINES
 
-*
 */
 
--- CREATE DATABASE Project2DB;
-
--- PRAGMA foreign_keys;
--- PRAGMA foreign_keys = ON;
-
-CREATE TABLE Project(
-    projectID INT PRIMARY KEY,
-    start DATE, 
-    location TEXT
-);
-
-CREATE TABLE SubProject(
-    projectID INT,
-    subprojectID INT,
-    start DATE,
-    finish DATE,
-    PRIMARY KEY (projectID, subprojectID),
-    FOREIGN KEY (projectID) REFERENCES Project(projectID)
-);
-
-CREATE TABLE Employee(
-    socialSecurityNo INT PRIMARY KEY,
-    name TEXT,
-    address TEXT
-);
-
-CREATE TABLE Absence(
-    socialSecurityNo INT,
-    start DATE,
-    duration TEXT,
-    reason TEXT,
-    PRIMARY KEY(socialSecurityNo, start),
-    FOREIGN KEY(socialSecurityNo) REFERENCES Employee(socialSecurityNo)
-);
-
-CREATE TABLE Qualification (
-    type TEXT PRIMARY KEY
-);
-
-CREATE TABLE Machine (
-    model TEXT PRIMARY KEY, 
-    description TEXT, 
-    manufacturer TEXT, 
-    size INT, 
-    fuel INT
-);
-
-CREATE TABLE Item (
-    model TEXT,
-    itemID INT,
-    PRIMARY KEY (model, itemID),
-    FOREIGN KEY (model) REFERENCES Machine(model)
-);
-
-CREATE TABLE Maintenance (
-    model TEXT, 
-    itemID INT, 
-    start DATE, 
-    reason TEXT, 
-    duration TEXT,
-    PRIMARY KEY (model, itemID, start),
-    FOREIGN KEY (model, itemID) REFERENCES Item(model, itemID)
-);
-
-CREATE TABLE HappensBefore(
-    beforeProjectID INT,
-    beforeSubprojectID INT,
-    afterProjectID INT,
-    afterSubprojectID INT,
-    PRIMARY KEY (beforeProjectID, beforeSubprojectID, afterProjectID, afterSubprojectID),
-    FOREIGN KEY (beforeProjectID, beforeSubprojectID) REFERENCES Subproject(projectID, subprojectID),
-    FOREIGN KEY (afterProjectID,  afterSubprojectID ) REFERENCES Subproject(projectID, subprojectID)
-);
-
-CREATE TABLE Needed(
-    model TEXT,
-    projectID INT,
-    subprojectID INT,
-    start DATE,
-    duration TEXT,
-    count INT,
-    PRIMARY KEY(model, projectID, subprojectID, start),
-    FOREIGN KEY(model) REFERENCES Machine(model),
-    FOREIGN KEY(projectID, subprojectID) REFERENCES Subproject(projectID, subprojectID)
-);
-
-CREATE TABLE Assigned(
-    model TEXT,
-    itemID INT,
-    projectID INT,
-    subprojectID INT,
-    start DATE,
-    duration TEXT,
-    PRIMARY KEY(model, itemId, projectID, subprojectID, start),
-    FOREIGN KEY(model, itemID) REFERENCES Item(model, itemID),
-    FOREIGN KEY(projectID, subprojectID) REFERENCES Subproject(projectID, subprojectID)
-);
-
-CREATE TABLE Requires(
-    projectID INT,
-    subprojectID INT,
-    qualificationType TEXT,
-    count INT,
-    PRIMARY KEY(projectID, subprojectID, qualificationType)
-    FOREIGN KEY(projectID, subprojectID) REFERENCES Subproject(projectID, subprojectID),
-    FOREIGN KEY(qualificationType) REFERENCES Qualification(type)
-);
-
-CREATE TABLE IsAppointedTo ( 
-    projectID INT,
-    subprojectID INT,
-    socialSecurityNo INT,
-    PRIMARY KEY(projectID, subprojectID, socialSecurityNo),
-    FOREIGN KEY(projectID, subprojectID) REFERENCES Subproject(projectID, subprojectID),
-    FOREIGN KEY(socialSecurityNo) REFERENCES Employee(socialSecurityNo)
-);
-
-CREATE TABLE HasTheQualification ( 
-    socialSecurityNo INT,
-    type TEXT,
-    PRIMARY KEY(socialSecurityNo, type),
-    FOREIGN KEY(socialSecurityNo) REFERENCES Employee(socialSecurityNo),
-    FOREIGN KEY(type) REFERENCES Qualification(type)
-);
-
-CREATE TABLE Substitute ( 
-    socialSecurityNoAbsent INT,
-    start DATE,
-    socialSecurityNoSubstitute INT, 
-    PRIMARY KEY(socialSecurityNoAbsent,start),
-    FOREIGN KEY(socialSecurityNoAbsent, start) REFERENCES Absence(socialSecurityNoAbsent, start),
-    FOREIGN KEY(socialSecurityNoAbsent) REFERENCES Employee(socialSecurityNo),
-    FOREIGN KEY(socialSecurityNoSubstitute) REFERENCES Employee(socialSecurityNo)
-);
-
--- A FEW USEFUL INDEXES
-
-CREATE INDEX EmployeesByName ON Employee(name);
-
-CREATE INDEX ProjectsByLocation ON Project(location);
-
-CREATE INDEX SubstitutionsBySubstitute ON Substitute(socialSecurityNoSubstitute);
-
-CREATE INDEX SubprojectsByTime ON Subproject(start, finish);
-
--- A FEW USEFUL VIEWS
-
-CREATE VIEW CurrentSubprojects
-AS 
-SELECT *
-FROM SubProject
-WHERE date('now') BETWEEN start AND finish;
-
-CREATE VIEW AvailableEmployees
-AS
-SELECT *
-FROM Employee
-EXCEPT 
-SELECT Employee.*
-FROM Employee INNER JOIN IsAppointedTo ON Employee.socialSecurityNo = IsAppointedTo.socialSecurityNo, CurrentSubprojects
-WHERE IsAppointedTo.subprojectID = CurrentSubprojects.subprojectID and IsAppointedTo.projectID = CurrentSubprojects.projectID
-EXCEPT
-SELECT Employee.*
-FROM Employee INNER JOIN Absence ON Employee.socialSecurityNo = Absence.socialSecurityNo
-WHERE date('now') BETWEEN start AND date(start,duration)
-EXCEPT
-SELECT Employee.*
-FROM Employee INNER JOIN Substitute ON Employee.socialSecurityNo = Substitute.socialSecurityNoSubstitute,Absence
-WHERE Substitute.socialSecurityNoAbsent = Absence.socialSecurityNo AND date('now') BETWEEN Absence.start AND date(Absence.start,duration);
-
--- INSERTING DATA IN THE DATABASE
+-- INPUT DATA FOR PROJECT2DB
+-- this scripts assumes script 'construction.sql' has been run prior
 
 INSERT INTO Project
 VALUES
@@ -246,7 +72,8 @@ VALUES
 (1,date('2021-04-14'),'10 days','holidays'),
 (2,date('2020-05-27'),'21 days','holidays'),
 (3,date('2019-04-10'),'3 days','sick'),
-(13,date('2019-05-06'),'60 days','holidays');
+(13,date('2019-05-06'),'60 days','holidays'),
+(8,date('2020-02-01'), '30 days', 'sick');
 
 INSERT INTO Substitute
 VALUES
@@ -330,19 +157,25 @@ VALUES
 
 INSERT INTO Machine
 VALUES
-('1', 'Electric Drill','Bosh',30,15),
-('2', 'Concrete mixer','Banggood',200,32),
-('3', 'Jigsaw','Bosh',42,22),
-('4', 'Electric Drill','Panasonic',41,12);
+('3D printer', 'prints 3 dinosaurs', 'Jurassic Inc.', 10, 'boiled plastic ref 2XRGB'),
+('drill', 'used to pierce through things, its fun', 'Bob the bricoleur Factory', 2, 'battery'),
+('Iron Oven', 'melts metal, can cook pizza', 'BlackGold Corp', 200, 'lots of coal');
 
 INSERT INTO Item
 VALUES
-('1',1),
-('1',2),
-('2',1),
-('2',2),
-('2',3),
-('3',1),
-('3',2),
-('4',1);
+('3D printer', 1),
+
+('drill', 1),
+('drill', 2),
+('drill', 3),
+('drill', 4),
+
+('Iron Oven', 1);
+
+INSERT INTO Assigned
+VALUES
+('drill', 1, 1, 1, date('2020-03-06'), '100 days'),
+('drill', 2, 1, 1, date('2020-03-06'), '100 days'),
+('drill', 3, 1, 1, date('2020-03-06'), '100 days')
+;
 
