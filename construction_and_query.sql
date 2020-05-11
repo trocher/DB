@@ -63,6 +63,11 @@ SELECT model, itemID
 FROM Maintenance
 WHERE NOT (date('2020-04-13','10 days') < start OR date('2020-04-13') > date(start,duration));
 
+-- We can finally insert one of the item returned by this query to the Assigned table
+INSERT INTO Needed
+VALUES
+('3',4,3,date('2020-04-13'),'10 days',1);
+
 -- The subproject manager can add in the needed line 
 -- ANSWER PENDING QUALIFICATION REQUIREMENTS
 -- find employees that correspond to qualifications x
