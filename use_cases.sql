@@ -203,6 +203,6 @@ FROM Maintenance
 WHERE NOT (date('2020-04-13','10 days') < start OR date('2020-04-13') > date(start,duration));
 
 -- We can finally insert one of the item returned by this query to the Assigned table
-INSERT INTO Needed
+INSERT INTO Assigned
 VALUES
-('3D printer',1,3,date('2020-04-13'),'10 days',1);
+('3D printer',1,1,3,date('2020-04-13'),'10 days');
