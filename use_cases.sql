@@ -6,7 +6,7 @@ CS-A1150 project part 2
 */
 
 /*
-total queries : 14
+total queries : 15
 total insert : 7
 total delete : 1
 TODO LIST:
@@ -77,9 +77,10 @@ WHERE projectID IN (
 ;
 
 -- CREATE A PROJECT
--- where is there less projects?
+-- where is there less scheduled projects?
 SELECT location, SUM(1)
 FROM Project
+WHERE date(start) >= date('now')
 ORDER BY SUM(1) ASC
 LIMIT 1
 ;
@@ -113,7 +114,7 @@ SELECT Employee.*
 FROM Employee INNER JOIN Absence ON Employee.socialSecurityNo = Absence.socialSecurityNo
 WHERE NOT (date('2020-05-11','4 days') < start OR date('2020-05-11') > date(start,duration))
 EXCEPT
--- Except the ones that are already substituing someone during the period
+-- Except the ones that are already substituting someone during the period
 SELECT Employee.*
 FROM Employee INNER JOIN Substitute ON Employee.socialSecurityNo = Substitute.socialSecurityNoSubstitute,Absence
 WHERE Substitute.socialSecurityNoAbsent = Absence.socialSecurityNo AND NOT (date('2020-05-11','4 days') < Absence.start OR date('2020-05-11') > date(Absence.start,Absence.duration));
@@ -171,13 +172,33 @@ VALUES
 ('drill', 3, date('now'), 'I made it fall', date('1 days'));
 
 -- HIRING PEOPLE
+-- The company wants a few demographics on what qualifications to employ more of
+
+-- number qualified employees for each type
 SELECT type, COUNT(socialSecurityNo)
 FROM HasTheQualification
-GROUP BY type;
+GROUP BY type
+ORDER BY COUNT(socialSecurityNo) ASC;
 
+-- qualifications that are most needed
 SELECT qualificationType, SUM(count)
 FROM Requires
-GROUP BY qualificationType;
+GROUP BY qualificationType
+ORDER BY SUM(count);
+
+-- number of employees that are not assigned by qualification
+SELECT type, SUM(socialSecurityNo)
+FROM HasTheQualification
+WHERE NOT socialSecurityNo IN (
+    SELECT socialSecurityNo
+    FROM IsAppointedTo
+    WHERE (projectID, subprojectID) NOT IN (
+        SELECT projectID, subprojectID
+        FROM CurrentSubprojects
+    )
+)
+GROUP BY type
+ORDER BY  SUM(socialSecurityNo);
 
 --A SUBPROJECT NEEDS A MACHINE
 
@@ -203,6 +224,6 @@ FROM Maintenance
 WHERE NOT (date('2020-04-13','10 days') < start OR date('2020-04-13') > date(start,duration));
 
 -- We can finally insert one of the item returned by this query to the Assigned table
-INSERT INTO Needed
+INSERT INTO Assigned
 VALUES
-('3D printer',1,3,date('2020-04-13'),'10 days',1);
+('3D printer',1,1,3,date('2020-04-13'),'10 days');
