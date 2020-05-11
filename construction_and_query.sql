@@ -6,10 +6,14 @@ CS-A1150 project part 2
 
 */
 
--- Tu peux sommer les dates avec des jours comme ca
--- On part donc du principe que nos durations sont toujours sous la forme 'x days', des TEXT
+
+/*
+Tu peux sommer les dates avec des jours comme ca
+On part donc du principe que nos durations sont toujours sous la forme 'x days', des TEXT
 SELECT date('now','6 days')
 FROM SubProject;
+
+*/
 
 -- USE CASES
 
@@ -37,6 +41,29 @@ FROM SubProject;
 -- assign item I to subproject X 
 -- 2
 
+-- USE CASE A SUB Project needs a machine
+-- Adding the machine needed into needed
+INSERT INTO Needed
+VALUES
+('3',4,3,date('2020-04-13'),'10 days',1);
+-- Finding an item of the corresponding machine that is available during the period
+
+-- Take all items that have the same model as requested
+SELECT Item.*
+FROM Item
+WHERE model = '3'
+EXCEPT
+-- Except the ones that will already be used by another subproject
+SELECT model, itemID
+FROM Assigned
+WHERE NOT (date('2020-04-13','10 days') < start OR date('2020-04-13') > date(start,duration))
+EXCEPT 
+-- Except the ones that are in maintenance during the same period
+SELECT model, itemID
+FROM Maintenance
+WHERE NOT (date('2020-04-13','10 days') < start OR date('2020-04-13') > date(start,duration));
+
+-- The subproject manager can add in the needed line 
 -- ANSWER PENDING QUALIFICATION REQUIREMENTS
 -- find employees that correspond to qualifications x
 -- appoint them to subproject
@@ -64,7 +91,6 @@ SELECT MAX(finish)
 FROM SubprojectsByTime
 WHERE projectID = X
 ;
-
 
 
 -- COMPANY STATISTICS
