@@ -15,33 +15,10 @@ FROM SubProject;
 
 */
 
--- USE CASES
+-- USE CASES ----------------------
 
--- COMPANY STATISTICS
--- most sick employees
--- never takes holliday employees
--- projects finished this year
--- most used machine
--- 4
+-- ### USE CASE : A Subproject needs a machine ###
 
--- CREATE A PROJECT
--- in which location is there more space?
--- when can we start it? lets not have more then X projects at a time
--- 2
-
--- CREATE A NEW SUBPROJECTS WITH ALL ITS NEEDS FROM AVAILABILITY
--- create subproject to project X
--- add qualification requirements
--- add machine needs
--- 0
-
--- ANSWER PENDING NEEDS
--- find pending needs
--- find available items
--- assign item I to subproject X 
--- 2
-
--- USE CASE A SUB Project needs a machine
 -- Adding the machine needed into needed
 INSERT INTO Needed
 VALUES
@@ -68,13 +45,7 @@ INSERT INTO Needed
 VALUES
 ('3',4,3,date('2020-04-13'),'10 days',1);
 
--- The subproject manager can add in the needed line 
--- ANSWER PENDING QUALIFICATION REQUIREMENTS
--- find employees that correspond to qualifications x
--- appoint them to subproject
--- 1
-
--- INFORMATIONS ABOUT PROJECT X
+-- ### USE CASE : INFORMATIONS ABOUT PROJECT X ###
 -- subprojects of project
 SELECT *
 FROM Subproject
@@ -97,8 +68,7 @@ FROM SubprojectsByTime
 WHERE projectID = X
 ;
 
-
--- COMPANY STATISTICS
+-- ### USE CASE : COMPANY STATISTICS ###
 -- Need to fire... look at employees ordered by sick leave durations this year
 SELECT socialSecurityNo, SUM(duration)
 FROM Absence
@@ -136,9 +106,10 @@ ORDER BY SUM(duration) DESC
 ;
 -- 4
 
--- CREATE A PROJECT
--- in which location is there less projects?
 
+-- ### USE CASE : CREATE A PROJECT ###
+
+-- in which location is there less projects?
 -- let l be the location of the result of this query
 SELECT location, SUM(1)
     FROM ProjectsByLocation
@@ -149,7 +120,8 @@ INSERT INTO Project VALUES (new_uid(), date('now'), l);
 -- 1
 
 
--- USE CASE AN EMPLOYEE IS SICK TODAY
+-- ### USE CASE : AN EMPLOYEE IS SICK TODAY ###
+
 SELECT CurrentSubprojects.*
 FROM IsAppointedTo, CurrentSubprojects
 WHERE IsAppointedTo.socialSecurityNo = 12 AND 
@@ -188,9 +160,11 @@ INSERT INTO Substitute
 VALUES
 (12,date('2020-05-11'),20);
 
+
+-- ### USE CASE : AN ITEM IS BROKEN ###
+
 -- drill 3 IS ASSIGNED TO PROJECT 1 AND JUST BROKE,
 -- ASSIGN ANOTHER ONE FOR THE REMAINING 3 DAYS AND PUT  IT IN MAINTENANCE
-
 -- find assignment and delete it
 DELETE 
 FROM Assigned
@@ -224,13 +198,7 @@ VALUES
 ('drill', 3, date('now'), date('1 day'));
 
 
--- ITEM I IS DAMAGED, WHO DID IT?
--- last 10 uses of item I
--- uses of item I this year
--- last maintenance for item I
--- 3
-
--- USE CASE HIRING PEOPLE
+-- ### USE CASE : HIRING PEOPLE ###
 SELECT type, COUNT(socialSecurityNo)
 FROM HasTheQualification
 GROUP BY type;
@@ -238,8 +206,3 @@ GROUP BY type;
 SELECT qualificationType, SUM(count)
 FROM Requires
 GROUP BY qualificationType;
-
--- USE CASE CREATE NEW PROJECT AND SUBPROJECT
-INSERT INTO Project
-VALUES
-(5, date('2020-05-14'), 'HELSINKI');
