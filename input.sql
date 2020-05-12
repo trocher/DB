@@ -172,10 +172,12 @@ VALUES
 
 ('Iron Oven', 1);
 
+INSERT INTO Needed
+VALUES
+('drill', 1, 1, date('2020-03-06'), '100 days', 3);
+
 INSERT INTO Assigned
 VALUES
 ('drill', 1, 1, 1, date('2020-03-06'), '100 days'),
 ('drill', 2, 1, 1, date('2020-03-06'), '100 days'),
-('drill', 3, 1, 1, date('2020-03-06'), '100 days')
-;
-
+('drill', 3, 1, 1, date('2020-03-06'), '100 days');
