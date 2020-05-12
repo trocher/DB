@@ -78,11 +78,17 @@ WHERE projectID IN (
 
 -- CREATE A PROJECT
 -- where is there less scheduled projects?
-SELECT location, SUM(1)
-FROM Project
+SELECT DISTINCT location, IFNULL(scheduledProject,0)
+FROM 
+Project
+LEFT OUTER JOIN (
+SELECT location, COUNT(location) AS scheduledProject
+FROM Project 
 WHERE date(start) >= date('now')
-ORDER BY SUM(1) ASC
-LIMIT 1
+GROUP BY location
+) AS ProjectB
+ON Project.location=ProjectB.location
+ORDER BY scheduledProject ASC
 ;
 -- there is space in 'ESPOO'
 INSERT INTO Project VALUES (88, date('now'), 'ESPOO');
